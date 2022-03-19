@@ -112,7 +112,7 @@ class Job:
 
     #ED is the expected duration of a job
     def ED(self):
-        return self.duration_dist.expect(lambda x : x)
+        return self.duration_dist.mean()
 
     def ED_inv(self,jobs):
         for job in jobs:
@@ -166,13 +166,13 @@ class LLV_Scheduler(Scheduler):
 
 class Simulation:
 
-    scheduler : Scheduler = LLV_Scheduler()
+    scheduler : Scheduler
     incoming_jobs = []
     
-
-    def __init__(self, jobs):
+    def __init__(self, jobs, scheduler):
         self.incoming_jobs = jobs
         self.incoming_jobs.sort(key = lambda x : x.arrival_time)
+        self.scheduler = scheduler
 
     def Run(self):
         time = 0
@@ -197,7 +197,7 @@ class Simulation:
 
 def main(argv):
     Jobs = ParseInputFile(argv[0])
-    simulation = Simulation(Jobs)
+    simulation = Simulation(Jobs, LLV_Scheduler() if len(argv) > 1 and argv[1] == 'LLV' else Scheduler())
     simulation.Run()
 
 if __name__ == "__main__":
