@@ -188,7 +188,7 @@ class Simulation:
                 current_job = self.scheduler.get_next_job(time)
                 current_job.started = time
             elif(time - current_job.started >= current_job.duration_mean):
-                value_generated = current_job.value_function.evaluate(time - current_job.started)
+                value_generated = current_job.value_function.evaluate(time - current_job.arrival_time)
                 print("Job {} finished at time {} (took {}) value = {}".format(current_job.id, time, time - current_job.started, value_generated))
                 total_value += value_generated
                 current_job = None
