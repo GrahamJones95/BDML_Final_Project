@@ -16,13 +16,30 @@ class DistType(Enum):
 class ValueFuncType(Enum):
     line = 0
     sections = 1
-class ValueFunction:
 
+class ValueFunction:
     func = lambda x : x
     pairs = []
     val1 = 0 
     val2 = 0
     type : ValueFuncType
+
+    def expectedValue(self, tc):
+        #print("getting expected value")
+        if(self.type == ValueFuncType.line):
+            x_inter = -self.val2 / self.val1
+            if(x_inter > tc):
+                y = self.evaluate(tc)
+                return 0.5*y*(x_inter - tc)
+            else:
+                return 0
+        #This needs to be fixed doesn't give the exact answer 
+        else:
+            total_val = 0
+            for i in range(len(self.pairs) - 1):
+                if(self.pairs[i+1][0] < tc):
+                    total_val += self.pairs[i][1] / (self.pairs[i+1][0] - self.pairs[i][0])
+            return total_val
 
     def evaluate(self, x):
         if(self.type == ValueFuncType.sections):
@@ -73,7 +90,6 @@ class Job:
     dependent_id : int
 
     duration_dist : norm = None
-    value_dist : norm = None
     NLV : float = -1
     started : int = -1
 
@@ -92,7 +108,7 @@ class Job:
 
     #EV is the expected value of a job
     def EV(self, tc):
-        return self.value_dist.expect(lambda x : x)
+        return self.value_function.expectedValue(tc)
 
     #ED is the expected duration of a job
     def ED(self):
@@ -103,12 +119,6 @@ class Job:
             if(job != self):
                 tot_time += job.ED()
         return tot_time / (len(jobs) - 1)
-
-def LLVJobSort(jobs, tc):
-    for job in jobs:
-        nlv = job.PLV(jobs, tc) - job.PGV(tc)
-
-    jobs.sort(key = lambda x : x.NLV)
 
 def ParseInputFile(filename):
     input_file = open(filename,'r')
@@ -125,7 +135,9 @@ def ParseInputFile(filename):
         penalty = int(params[6])
         dependent_id = int(params[7])
 
-        Jobs.append(Job(id, arrival_time, dist_type, duration_mean, duration_sd, value_function, penalty, dependent_id))
+        new_job = Job(id, arrival_time, dist_type, duration_mean, duration_sd, value_function, penalty, dependent_id)
+        new_job.duration_dist = norm(loc = duration_mean, scale = duration_sd)
+        Jobs.append(new_job)
     return Jobs
 
 class Scheduler:
@@ -135,15 +147,26 @@ class Scheduler:
     def add_job(self, job):
         self.pending_jobs.append(job)
     
-    def get_next_job(self):
+    def get_next_job(self, time):
         return self.pending_jobs.pop(0)
 
     def has_pending(self):
         return len(self.pending_jobs) > 0
 
+class LLV_Scheduler(Scheduler):
+
+    def get_next_job(self, time):
+        self.LLVJobSort(time)
+        return self.pending_jobs.pop(0)
+
+    def LLVJobSort(self, tc):
+        for job in self.pending_jobs:
+            job.NLV = job.PLV(self.pending_jobs, tc) - job.PGV(tc)
+        self.pending_jobs.sort(key = lambda x : x.NLV)
+
 class Simulation:
 
-    scheduler : Scheduler = Scheduler()
+    scheduler : Scheduler = LLV_Scheduler()
     incoming_jobs = []
     
 
@@ -162,7 +185,7 @@ class Simulation:
                 self.scheduler.add_job(new_job)
 
             if(current_job == None):
-                current_job = self.scheduler.get_next_job()
+                current_job = self.scheduler.get_next_job(time)
                 current_job.started = time
             elif(time - current_job.started >= current_job.duration_mean):
                 value_generated = current_job.value_function.evaluate(time - current_job.started)
