@@ -136,8 +136,11 @@ def ParseInputFile(filename):
         dependent_id = int(params[7])
 
         new_job = Job(id, arrival_time, dist_type, duration_mean, duration_sd, value_function, penalty, dependent_id)
+        # new_job.duration_dist = lognorm(s = 2,loc = duration_mean, scale = duration_sd)
         new_job.duration_dist = norm(loc = duration_mean, scale = duration_sd)
+
         Jobs.append(new_job)
+
     return Jobs
 
 class Scheduler:
@@ -189,8 +192,9 @@ class Simulation:
                 current_job.started = time
             elif(time - current_job.started >= current_job.duration_mean):
                 value_generated = current_job.value_function.evaluate(time - current_job.arrival_time)
-                print("Job {} finished at time {} (took {}) value = {}".format(current_job.id, time, time - current_job.started, value_generated))
+                # print("Job {} finished at time {} (took {}) value = {}".format(current_job.id, time, time - current_job.started, value_generated))
                 total_value += value_generated
+                print("{} {} {}".format(time - current_job.started, total_value, len(self.scheduler.pending_jobs)))
                 current_job = None
             time += 1
         print("Total value generated is {:.2f}".format(total_value))
