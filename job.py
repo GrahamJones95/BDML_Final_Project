@@ -107,7 +107,7 @@ class Job:
 
     #EV is the expected value of a job
     def EV(self, tc):
-        return self.value_function.expectedValue(tc)
+        return self.value_function.expectedValue(tc - self.arrival_time)
 
     #ED is the expected duration of a job
     def ED(self):

@@ -1,3 +1,5 @@
+#Continuous is just a copy of the main file, but with adaptations to allow for continuously streaming inputs
+
 from dataclasses import dataclass
 from random import Random
 from matplotlib.colors import LogNorm
@@ -33,35 +35,32 @@ def ParseInputFile(filename):
 
 class Simulation:
     
-    def __init__(self, jobs, scheduler):
-        self.scheduler = scheduler      
+    def __init__(self, scheduler):
+        self.scheduler : Scheduler = scheduler      
 
     def Run(self):
         time = 0
-        current_jobs = None
+        current_job = None
         total_value = 0
         value_array = []
         job_queue = []
-        value_funcs = [ValueFunction("(0, 100), (360, 90), (720, 80), (1080, 70), (1440, 60), (1800, 50), (2160, 40), (2520, 30), (2880, 20), (3240, 10), (3600, 0)"),\
-            ValueFunction("(0, 100), (1800, 50), (3600, 0)")]
+        job_num = 0
+        value_funcs = [ValueFunction("(0, 100), (360, 90), (720, 80), (1080, 70), (1440, 60), (1800, 50), (2160, 40), (2520, 30), (2880, 20), (3240, 10), (3600, -5)"),\
+            ValueFunction("(0, 100), (1800, 50), (3600, -5)")]
         while(time < 6*60*60): #Each timestep corresponds to a second
 
-            if(time % 30 == 0):
-                rand_duration = randint(300,3600)
-                job = Job(1, time, DistType.Normal, rand_duration,0,choice(value_funcs),-1,-1,norm(rand_duration))
-                job_queue.append(Job())
-
-            while(len(self.incoming_jobs) > 0 and self.incoming_jobs[0].arrival_time <= time):
-                new_job = self.incoming_jobs.pop(0)
-                #print(str(new_job.id) + " arrived at time " + str(time))
-                self.scheduler.add_job(new_job)
+            if(time % (30*6) == 0):
+                rand_duration = randint(100,500)
+                job = Job(job_num, time, DistType.Normal, rand_duration,0,choice(value_funcs),-1,-1,norm(rand_duration))
+                self.scheduler.add_job(job)
+                job_num += 1
 
             if(current_job == None and self.scheduler.has_pending()):
                 current_job = self.scheduler.get_next_job(time)
                 current_job.started = time
             elif(current_job != None and time - current_job.started >= current_job.duration_mean):
                 value_generated = current_job.value_function.evaluate(time - current_job.arrival_time)
-                print("Job {} finished at time {} (took {}) value = {}".format(current_job.id, time, time - current_job.started, value_generated))
+                print("Job {} finished at time {} (took {}) value = {} Queue size = {}".format(current_job.id, time, time - current_job.started, value_generated,len(self.scheduler.pending_jobs)))
                 total_value += value_generated
                 current_job = None
             time += 1
@@ -85,18 +84,18 @@ def main(argv):
     parser.add_argument('input_file',type=str)
     parser.add_argument('--sched', dest='sched',choices=["LLV","FCFS","SJF"])
 
-    args = parser.parse_args()
+    #args = parser.parse_args()
 
-    print(args.input_file)
+    #print(args.input_file)
 
-    Jobs = ParseInputFile(args.input_file)
+    #Jobs = ParseInputFile(args.input_file)
     
     f, (ax1, ax2) = plt.subplots(2)
     ax1.set_title("Profit over time")
     ax2.set_title("Queue size over time")
 
-    for scheduler in [(LLV_Scheduler(),"LLV"),(Scheduler(),"FCFS"),(SJF(),"SJF")]: 
-        simulation = Simulation(Jobs.copy(), scheduler[0])
+    for scheduler in [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF")]: 
+        simulation = Simulation(scheduler[0])
         profit,queue = simulation.Run()
         ax1.plot(profit, label=scheduler[1])
         ax2.plot(queue, label=scheduler[1])
