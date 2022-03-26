@@ -1,12 +1,7 @@
 #Continuous is just a copy of the main file, but with adaptations to allow for continuously streaming inputs
 
-from dataclasses import dataclass
-from random import Random
-from matplotlib.colors import LogNorm
 from scipy.stats import lognorm, norm
-from math import exp
 import matplotlib.pyplot as plt
-import numpy as np
 import sys
 import argparse
 from scheduler import Scheduler, LLV_Scheduler, SJF
@@ -43,13 +38,13 @@ class Simulation:
         current_job = None
         total_value = 0
         value_array = []
-        job_queue = []
+        queue_length_hist = []
         job_num = 0
         value_funcs = [ValueFunction("(0, 100), (360, 90), (720, 80), (1080, 70), (1440, 60), (1800, 50), (2160, 40), (2520, 30), (2880, 20), (3240, 10), (3600, -5)"),\
             ValueFunction("(0, 100), (1800, 50), (3600, -5)")]
         while(time < 6*60*60): #Each timestep corresponds to a second
 
-            if(time % (30*6) == 0):
+            if(time % (30*4) == 0): # and len(self.scheduler.pending_jobs) < 40):
                 rand_duration = randint(100,500)
                 job = Job(job_num, time, DistType.Normal, rand_duration,0,choice(value_funcs),-1,-1,norm(rand_duration))
                 self.scheduler.add_job(job)
@@ -65,9 +60,9 @@ class Simulation:
                 current_job = None
             time += 1
             value_array.append(total_value)
-            job_queue.append(len(self.scheduler.pending_jobs))
+            queue_length_hist.append(len(self.scheduler.pending_jobs))
         print("Total value generated is {:.2f}".format(total_value))
-        return value_array,job_queue
+        return value_array,queue_length_hist
 
 #Delete this late, this function is just for examining the value functions of individuals jobs
 #was used for debugging issues with the expected value function

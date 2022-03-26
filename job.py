@@ -12,8 +12,8 @@ class ValueFuncType(Enum):
     sections = 1
 
 class ValueFunction:
+    #Note that currently the line type does not work for penalties
     def expectedValue(self, tc):
-        #print("getting expected value")
         if(self.type == ValueFuncType.line):
             x_inter = -self.intercept / self.slope
             if(x_inter > tc):
@@ -33,7 +33,7 @@ class ValueFunction:
             if(start < self.pairs[-1][0]):
                 return total_val / (self.pairs[-1][0] - start)
             else:
-                return 0
+                return self.pairs[-1][1]
 
     def evaluate(self, x):
         if(self.type == ValueFuncType.sections):
@@ -55,7 +55,7 @@ class ValueFunction:
         self.intercept = 0
         self.type : ValueFuncType
         print("Parsing " + string)
-        pairRegex = re.compile(r'\(([0-9]+),(\s*[0-9]+)\)')
+        pairRegex = re.compile(r'\(([0-9]+),(\s*-?[0-9]+)\)')
         if(pairRegex.search(string)):
             self.type = ValueFuncType.sections 
             for pair in pairRegex.findall(string):
@@ -97,7 +97,7 @@ class Job:
         lostvalue = 0
         for job in jobs:
             if(job != self):
-                lostvalue += job.EV(tc) - job.EV(tc + self.ED())
+                lostvalue += (job.EV(tc) - job.EV(tc + self.ED()))
         return lostvalue
     
     #PGV is the potential gained value
