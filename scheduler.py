@@ -1,3 +1,5 @@
+import functools
+
 class Scheduler:
 
     def __init__(self):
@@ -31,3 +33,23 @@ class SJF(Scheduler):
                 next_job = job
         self.pending_jobs.remove(next_job)
         return next_job
+
+class MOD(Scheduler):
+    def get_next_job(self, time):
+        self.LLVJobSort(time)
+        return self.pending_jobs.pop(0)
+
+    def LLVJobSort(self, tc):
+        for job in self.pending_jobs:
+            job.NLV = job.PGV(tc, self.pending_jobs)
+        self.pending_jobs.sort(key = lambda x : x.NLV)
+
+class MOD2(Scheduler):
+    def get_next_job(self, time):
+        self.LLVJobSort(time)
+        return self.pending_jobs.pop(0)
+
+    def LLVJobSort(self, tc):
+        for job in self.pending_jobs:
+            job.NLV = job.PLV(self.pending_jobs, tc)
+        self.pending_jobs.sort(key = lambda x : x.NLV)

@@ -4,7 +4,7 @@ from scipy.stats import lognorm, norm
 import matplotlib.pyplot as plt
 import sys
 import argparse
-from scheduler import Scheduler, LLV_Scheduler, SJF
+from scheduler import Scheduler, LLV_Scheduler, SJF, MOD, MOD2
 from job import Job, ValueFunction, DistType
 from random import randint, choice
 
@@ -89,7 +89,7 @@ def main(argv):
     ax1.set_title("Profit over time")
     ax2.set_title("Queue size over time")
 
-    for scheduler in [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF")]: 
+    for scheduler in [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(MOD(),"MOD"),(MOD2(),"MOD2")]:
         simulation = Simulation(scheduler[0])
         profit,queue = simulation.Run()
         ax1.plot(profit, label=scheduler[1])

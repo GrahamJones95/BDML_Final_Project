@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import argparse
-from scheduler import Scheduler, LLV_Scheduler, SJF
+from scheduler import Scheduler, LLV_Scheduler, SJF, MOD, MOD2
 from job import Job, ValueFunction, DistType
 
 def ParseInputFile(filename):
@@ -75,7 +75,7 @@ def main(argv):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('input_file',type=str)
-    parser.add_argument('--sched', dest='sched',choices=["LLV","FCFS","SJF"])
+    parser.add_argument('--sched', dest='sched',choices=["LLV","FCFS","SJF", "MOD"])
 
     args = parser.parse_args()
 
@@ -87,7 +87,7 @@ def main(argv):
     ax1.set_title("Profit over time")
     ax2.set_title("Queue size over time")
 
-    for scheduler in [(LLV_Scheduler(),"LLV"),(Scheduler(),"FCFS"),(SJF(),"SJF")]: 
+    for scheduler in [(LLV_Scheduler(),"LLV"),(Scheduler(),"FCFS"),(SJF(),"SJF"),(MOD(),"MOD"),(MOD2(),"MOD2")]:
         simulation = Simulation(Jobs.copy(), scheduler[0])
         profit,queue = simulation.Run()
         ax1.plot(profit, label=scheduler[1])
