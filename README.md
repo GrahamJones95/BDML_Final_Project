@@ -8,7 +8,11 @@ Graham Jones and Neeraj Kanuri
 This repository contains a duplication of the work found in [this paper](https://dl.acm.org/doi/10.1145/3306309.3306339)
 ## Instructions
 
-Run a sample simulation by running `python3 drone_scheduling.py eval7.txt`
+Run a continuous test with `python continuous.py`
+
+The following shows the output for a continuous simulation
+
+![6 hours continuous drone arrival](/Figure_1.png)
 
 To profile the code run the following:
 

@@ -39,30 +39,40 @@ class Simulation:
         total_value = 0
         value_array = []
         queue_length_hist = []
+        number_deliveries = 0
+        number_delivered_hist = []
+        rev_per_delivery = []
         job_num = 0
         value_funcs = [ValueFunction("(0, 100), (360, 90), (720, 80), (1080, 70), (1440, 60), (1800, 50), (2160, 40), (2520, 30), (2880, 20), (3240, 10), (3600, -5)"),\
             ValueFunction("(0, 100), (1800, 50), (3600, -5)")]
         while(time < 6*60*60): #Each timestep corresponds to a second
 
-            if(time % (30*4) == 0): # and len(self.scheduler.pending_jobs) < 40):
+            if(time % (30*6) == 0): # and len(self.scheduler.pending_jobs) < 40):
                 rand_duration = randint(100,500)
-                job = Job(job_num, time, DistType.Normal, rand_duration,0,choice(value_funcs),-1,-1,norm(rand_duration))
+                sigma = 40
+                job = Job(job_num, time, DistType.Normal, rand_duration,sigma,choice(value_funcs),-1,-1,norm(rand_duration))
+                job.end_time = job.duration_dist.rvs(1)
                 self.scheduler.add_job(job)
                 job_num += 1
 
             if(current_job == None and self.scheduler.has_pending()):
                 current_job = self.scheduler.get_next_job(time)
                 current_job.started = time
-            elif(current_job != None and time - current_job.started >= current_job.duration_mean):
+            elif(current_job != None and time - current_job.started >= current_job.end_time):
                 value_generated = current_job.value_function.evaluate(time - current_job.arrival_time)
                 print("Job {} finished at time {} (took {}) value = {} Queue size = {}".format(current_job.id, time, time - current_job.started, value_generated,len(self.scheduler.pending_jobs)))
                 total_value += value_generated
                 current_job = None
+                number_deliveries += 1
+
             time += 1
             value_array.append(total_value)
             queue_length_hist.append(len(self.scheduler.pending_jobs))
+            number_delivered_hist.append(number_deliveries)
+            rev_per_delivery.append( 0 if(number_deliveries == 0) else total_value / number_deliveries)
+            
         print("Total value generated is {:.2f}".format(total_value))
-        return value_array,queue_length_hist
+        return value_array, queue_length_hist, number_delivered_hist, rev_per_delivery
 
 #Delete this late, this function is just for examining the value functions of individuals jobs
 #was used for debugging issues with the expected value function
@@ -85,18 +95,24 @@ def main(argv):
 
     #Jobs = ParseInputFile(args.input_file)
     
-    f, (ax1, ax2) = plt.subplots(2)
+    f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2)
     ax1.set_title("Profit over time")
     ax2.set_title("Queue size over time")
+    ax3.set_title("Number of deliveries")
+    ax4.set_title("Revenue per delivery")
 
     for scheduler in [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF")]: 
         simulation = Simulation(scheduler[0])
-        profit,queue = simulation.Run()
+        profit, queue, number_deliveries, rev_per = simulation.Run()
         ax1.plot(profit, label=scheduler[1])
         ax2.plot(queue, label=scheduler[1])
+        ax3.plot(number_deliveries, label=scheduler[1])
+        ax4.plot(rev_per, label=scheduler[1])
 
     ax1.legend()
     ax2.legend()
+    ax3.legend()
+    ax4.legend()
     plt.show()
 
 if __name__ == "__main__":

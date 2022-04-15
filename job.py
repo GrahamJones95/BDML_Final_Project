@@ -91,6 +91,7 @@ class Job:
     duration_dist : norm = None
     NLV : float = -1
     started : int = -1
+    end_time : int = -1
 
     #PLV is the potential lost value
     def PLV(self,jobs,tc):
