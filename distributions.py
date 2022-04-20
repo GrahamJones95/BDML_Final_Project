@@ -1,16 +1,14 @@
 from scipy.stats import lognorm, norm
-
-from math import exp, log
 import matplotlib.pyplot as plt
-import numpy as np
+import sys
+import argparse
+from scheduler import Scheduler, LLV_Scheduler, SJF
+from job import Job, ValueFunction, DistType
+from random import randint, choice
 
-my_dist = norm(10,)
+value_funcs = [ValueFunction("(0, 100), (360, 90), (720, 80), (1080, 70), (1440, 60), (1800, 50), (2160, 40), (2520, 30), (2880, 20), (3240, 10), (3600, -5)"),\
+            ValueFunction("(0, 100), (1800, 50), (3600, -5)")]
 
-
-print(norm(10).expect(lambda x : x))
-print(lognorm(10, 10).expect(lambda x : x, ub = 100000000, lb = 0))
-print(exp(10 + 1/2))
-
-dist = lognorm(343, scale = log(5532)-(343*343)/2)
-
-print(dist.expect(lambda x : x))
+for i in range(36):
+    val = value_funcs[0].evaluate(i*80)
+    print(f"Value at {i*80} is {val}")

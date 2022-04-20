@@ -1,6 +1,7 @@
 #Continuous is just a copy of the main file, but with adaptations to allow for continuously streaming inputs
 
 from scipy.stats import lognorm, norm
+from math import sqrt
 import matplotlib.pyplot as plt
 import sys
 import argparse
@@ -47,10 +48,11 @@ class Simulation:
             ValueFunction("(0, 100), (1800, 50), (3600, -5)")]
         while(time < 6*60*60): #Each timestep corresponds to a second
 
-            if(time % (30*6) == 0): # and len(self.scheduler.pending_jobs) < 40):
-                rand_duration = randint(100,500)
-                sigma = 40
-                job = Job(job_num, time, DistType.Normal, rand_duration,sigma,choice(value_funcs),-1,-1,norm(rand_duration))
+            if(time % (100) == 0): # and len(self.scheduler.pending_jobs) < 40):
+                rand_duration = sqrt(randint(10000,250000))
+                sigma = 10
+                job = Job(job_num, time, DistType.Normal, rand_duration, sigma, choice(value_funcs), -1, -1, norm(rand_duration))
+                #job = Job(job_num, time, DistType.Normal, 150, 0, value_funcs[0], -1, -1, norm(rand_duration))
                 job.end_time = job.duration_dist.rvs(1)
                 self.scheduler.add_job(job)
                 job_num += 1
@@ -58,6 +60,7 @@ class Simulation:
             if(current_job == None and self.scheduler.has_pending()):
                 current_job = self.scheduler.get_next_job(time)
                 current_job.started = time
+
             elif(current_job != None and time - current_job.started >= current_job.end_time):
                 value_generated = current_job.value_function.evaluate(time - current_job.arrival_time)
                 print("Job {} finished at time {} (took {}) value = {} Queue size = {}".format(current_job.id, time, time - current_job.started, value_generated,len(self.scheduler.pending_jobs)))
