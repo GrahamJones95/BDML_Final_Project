@@ -54,7 +54,7 @@ class ValueFunction:
         self.slope = 0 
         self.intercept = 0
         self.type : ValueFuncType
-        print("Parsing " + string)
+        #print("Parsing " + string)
         pairRegex = re.compile(r'\(([0-9]+),(\s*-?[0-9]+)\)')
         if(pairRegex.search(string)):
             self.type = ValueFuncType.sections 
@@ -81,17 +81,17 @@ class ValueFunction:
 class Job:
     id : int
     arrival_time : int
-    dist_type : DistType
-    duration_mean : int
-    duration_sd : int
     value_function : ValueFunction
-    penalty : int
-    dependent_id : int
+    location : tuple[int, int]
 
     duration_dist : norm = None
     NLV : float = -1
     started : int = -1
     end_time : int = -1
+    expired : bool = False
+
+    def get_duration(self,p2 = (0,0), speed = 1):
+        return ((self.location[0] - p2[0])**2 + (self.location[1] - p2[1])**2)**0.5/speed
 
     #PLV is the potential lost value
     def PLV(self,jobs,tc):
@@ -112,7 +112,7 @@ class Job:
 
     #ED is the expected duration of a job
     def ED(self):
-        return self.duration_dist.mean()
+        return self.get_duration()
         #return self.duration_mean
 
     def ED_avg(self,jobs):

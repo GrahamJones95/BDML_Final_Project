@@ -5,7 +5,7 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import sys
 import argparse
-from scheduler import Scheduler, LLV_Scheduler, SJF
+from scheduler import SJF_Multi, Scheduler, LLV_Scheduler, SJF, FCFS_Multi
 from job import Job, ValueFunction, DistType
 from random import randint, choice
 from simulation import Simulation
@@ -58,7 +58,12 @@ def main(argv):
     ax3.set_title("Number of deliveries")
     ax4.set_title("Revenue per delivery")
 
-    for scheduler in [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF")]: 
+    #schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple")]
+    schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
+    #schedulers = [(FCFS_Multi(),"FCFS")]
+
+    for scheduler in schedulers: 
+        print(f"Running sim with {scheduler[1]}")
         simulation = Simulation(scheduler[0])
         profit, queue, number_deliveries, rev_per = simulation.Run()
         ax1.plot(profit, label=scheduler[1])
