@@ -41,8 +41,8 @@ def examineJob(job):
 
 
 def main(argv):
-    run_experiment_1()
-    #run_experiment_2()
+    #run_experiment_1()
+    run_experiment_2()
 
 
 def run_experiment_1():
@@ -59,7 +59,7 @@ def run_experiment_1():
     for scheduler in schedulers: 
         print(f"Running sim with {scheduler[1]}")
         simulation = Simulation(scheduler[0])
-        profit, queue, number_deliveries, rev_per = simulation.Run()
+        profit, queue, number_deliveries, rev_per = simulation.Run(150)
         ax1.plot(profit, label=scheduler[1])
         ax2.plot(queue, label=scheduler[1])
         ax3.plot(number_deliveries, label=scheduler[1])
@@ -80,15 +80,16 @@ def run_experiment_2():
     #schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
     #schedulers = [(FCFS_Multi(),"FCFS")]
 
-    arrival_rates = range(50,301,5)
+    arrival_rates = range(50,1001,50)
     for scheduler in schedulers: 
         profit_list = []
-        simulation = Simulation(scheduler[0])
+
         for arrival_rate in arrival_rates:
-            print(f"Running sim with {scheduler[1]}")
-            profit, queue, number_deliveries, rev_per = simulation.Run(arrival_rate)
+            simulation = Simulation(scheduler[0])
+            print(f"Running sim with {scheduler[1]} at {arrival_rate}s interval")
+            profit, queue, number_deliveries, rev_per = simulation.Run(arrival_rate = arrival_rate)
             profit_list.append(profit[-1])
-        plt.plot(arrival_rates, profit_list, label=scheduler[1])
+        plt.plot(arrival_rates, profit_list, "--*", label=scheduler[1])
 
     plt.legend()
     plt.show()

@@ -41,7 +41,7 @@ class Simulation:
                 value_generated = route.get_value(time)
                 #print("Job {} finished at time {} (took {}) value = {} Queue size = {}".format(route.Jobs[0].id, time, time - route.Jobs[0].started, value_generated,len(self.scheduler.pending_jobs)))
                 total_value += value_generated
-                number_deliveries += 1
+                number_deliveries += len(route.Jobs)
 
             time += 1
             value_array.append(total_value)
@@ -133,8 +133,10 @@ class Route:
 
     def get_value(self, tc) -> int:
         total_val = 0
-        for job in self.Jobs:
-            total_val += job.value_function.evaluate(tc - job.arrival_time)
+        gap = self.Jobs[-1].get_duration()
+        for i,job in reversed(list(enumerate(self.Jobs))):
+            total_val += job.value_function.evaluate((tc - gap) - job.arrival_time)
+            gap += self.Jobs[i].get_duration(self.Jobs[i-1].location)
         return total_val
     
     def get_duration(self):
