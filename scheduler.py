@@ -6,6 +6,9 @@ class Scheduler:
 
     def __init__(self):
         self.pending_jobs = []
+    
+    def clear(self):
+        self.pending_jobs = []
 
     def add_job(self, job):
         self.pending_jobs.append(job)

@@ -10,10 +10,9 @@ class Simulation:
         self.scheduler : Scheduler = scheduler 
         self.max_time = 6*60*60 #6 hours per the paper
 
-    def Run(self, arrival_rate = 120):
+    def Run(self, arrival_interval = 60, queue_size = 40, num_drones = 15):
         time = 0
-        num_drones : int = 5
-        job_gen : Job_Generator = Job_Generator(arrival_rate)
+        job_gen : Job_Generator = Job_Generator(arrival_interval)
         job_queue : ActiveDrones = ActiveDrones(num_drones)
 
         #Telemetry saving
@@ -26,7 +25,7 @@ class Simulation:
 
         while(time < 6*60*60): #Each timestep corresponds to a second
 
-            if(job_gen.new_job_available(time)):
+            if(job_gen.new_job_available(time) and len(self.scheduler.pending_jobs) < queue_size):
                 self.scheduler.add_job(job_gen.fetch_new_job(time))
 
             while(job_queue.droneIsAvailable() and self.scheduler.has_pending()):
@@ -49,7 +48,7 @@ class Simulation:
             number_delivered_hist.append(number_deliveries)
             rev_per_delivery.append( 0 if(number_deliveries == 0) else total_value / number_deliveries)
             
-        print("Total value generated is {:.2f}".format(total_value))
+        #print("Total value generated is {:.2f}".format(total_value))
         return value_array, queue_length_hist, number_delivered_hist, rev_per_delivery
 
 class ActiveDrones:
