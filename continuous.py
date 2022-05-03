@@ -41,17 +41,11 @@ def examineJob(job):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser()
+    #run_experiment_1()
+    run_experiment_2()
 
-    parser.add_argument('input_file',type=str)
-    parser.add_argument('--sched', dest='sched',choices=["LLV","FCFS","SJF"])
 
-    #args = parser.parse_args()
-
-    #print(args.input_file)
-
-    #Jobs = ParseInputFile(args.input_file)
-    
+def run_experiment_1():
     f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2)
     ax1.set_title("Profit over time")
     ax2.set_title("Queue size over time")
@@ -75,6 +69,28 @@ def main(argv):
     ax2.legend()
     ax3.legend()
     ax4.legend()
+    plt.show()
+
+def run_experiment_2():
+    plt.title("Total Profit vs Arrival Interval")
+    plt.xlabel("Arrival Interval (s)")
+    plt.ylabel("Profit")
+
+    schedulers = [(Scheduler(),"FCFS"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
+    #schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
+    #schedulers = [(FCFS_Multi(),"FCFS")]
+
+    arrival_rates = range(50,301,5)
+    for scheduler in schedulers: 
+        profit_list = []
+        simulation = Simulation(scheduler[0])
+        for arrival_rate in arrival_rates:
+            print(f"Running sim with {scheduler[1]}")
+            profit, queue, number_deliveries, rev_per = simulation.Run(arrival_rate)
+            profit_list.append(profit[-1])
+        plt.plot(arrival_rates, profit_list, label=scheduler[1])
+
+    plt.legend()
     plt.show()
 
 if __name__ == "__main__":

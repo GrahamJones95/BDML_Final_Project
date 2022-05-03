@@ -10,10 +10,10 @@ class Simulation:
         self.scheduler : Scheduler = scheduler 
         self.max_time = 6*60*60 #6 hours per the paper
 
-    def Run(self):
+    def Run(self, arrival_rate = 120):
         time = 0
         num_drones : int = 5
-        job_gen : Job_Generator = Job_Generator(100) #55 
+        job_gen : Job_Generator = Job_Generator(arrival_rate)
         job_queue : ActiveDrones = ActiveDrones(num_drones)
 
         #Telemetry saving
@@ -96,7 +96,7 @@ class Drone:
 class Job_Generator:
 
     MAX_DIST = 900 #Must be less than 1800 to complete in an hour
-    MIN_DIST = 200
+    MIN_DIST = 0
 
     def __init__(self, interval) -> None:
         self.time_interval = interval
