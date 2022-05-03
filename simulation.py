@@ -140,8 +140,8 @@ class Route:
     def get_duration(self):
         tot_duration = 0
         tot_duration += self.Jobs[0].get_duration()
-        for i in range(1,len(self.Jobs)-1):
-            tot_duration +=  self.Jobs[i].get_duration(self.Jobs[i + 1].location)
+        for i in range(1,len(self.Jobs)):
+            tot_duration +=  self.Jobs[i].get_duration(self.Jobs[i - 1].location)
         
         tot_duration += self.Jobs[-1].get_duration()
         return tot_duration

@@ -2,7 +2,7 @@ from job import Job
 
 class Scheduler:
 
-    DRONE_RANGE = 3600
+    DRONE_RANGE = 1800
 
     def __init__(self):
         self.pending_jobs = []
@@ -57,16 +57,9 @@ class SJF_Multi(Scheduler):
     def add_job(self, job):
         self.pending_jobs.append(job)
         self.pending_jobs.sort(key = lambda x : x.get_duration())
-
-    #def get_next_job(self, time):
-    #    jobs = []
-    #    while(self.pending_jobs and self.get_route_length(jobs + [self.pending_jobs[0]]) < self.DRONE_RANGE):
-    #        jobs.append(self.pending_jobs.pop(0))
-    #    print(len(jobs))
-    #    return jobs
     
     def get_next_job(self, time):
         jobs = [self.pending_jobs.pop(0)]
-        while(self.pending_jobs and self.get_route_length(jobs + [self.pending_jobs[0]]) < self.DRONE_RANGE and jobs[-1].get_duration() < jobs[-1].get_duration(self.pending_jobs[0].location)):
+        while(self.pending_jobs and self.get_route_length(jobs + [self.pending_jobs[0]]) < self.DRONE_RANGE and jobs[-1].get_duration() > jobs[-1].get_duration(self.pending_jobs[0].location)):
             jobs.append(self.pending_jobs.pop(0))
         return jobs

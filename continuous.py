@@ -41,8 +41,8 @@ def examineJob(job):
 
 
 def main(argv):
-    #run_experiment_1()
-    run_experiment_2()
+    run_experiment_1()
+    #run_experiment_2()
 
 
 def run_experiment_1():
