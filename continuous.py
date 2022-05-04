@@ -5,9 +5,12 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import sys
 import argparse
-from scheduler import Scheduler, LLV_Scheduler, SJF
+from scheduler import SJF_Multi, Scheduler, LLV_Scheduler, SJF, FCFS_Multi
 from job import Job, ValueFunction, DistType
 from random import randint, choice
+from simulation import Simulation
+from tqdm import tqdm 
+from time import time
 
 def ParseInputFile(filename):
     input_file = open(filename,'r')
@@ -29,53 +32,6 @@ def ParseInputFile(filename):
         Jobs.append(new_job)
     return Jobs
 
-class Simulation:
-    
-    def __init__(self, scheduler):
-        self.scheduler : Scheduler = scheduler      
-
-    def Run(self):
-        time = 0
-        current_job = None
-        total_value = 0
-        value_array = []
-        queue_length_hist = []
-        number_deliveries = 0
-        number_delivered_hist = []
-        rev_per_delivery = []
-        job_num = 0
-        value_funcs = [ValueFunction("(0, 100), (360, 90), (720, 80), (1080, 70), (1440, 60), (1800, 50), (2160, 40), (2520, 30), (2880, 20), (3240, 10), (3600, -5)"),\
-            ValueFunction("(0, 100), (1800, 50), (3600, -5)")]
-        while(time < 6*60*60): #Each timestep corresponds to a second
-
-            if(time % (100) == 0): # and len(self.scheduler.pending_jobs) < 40):
-                rand_duration = sqrt(randint(10000,250000))
-                sigma = 10
-                job = Job(job_num, time, DistType.Normal, rand_duration, sigma, choice(value_funcs), -1, -1, norm(rand_duration))
-                #job = Job(job_num, time, DistType.Normal, 150, 0, value_funcs[0], -1, -1, norm(rand_duration))
-                job.end_time = job.duration_dist.rvs(1)
-                self.scheduler.add_job(job)
-                job_num += 1
-
-            if(current_job == None and self.scheduler.has_pending()):
-                current_job = self.scheduler.get_next_job(time)
-                current_job.started = time
-
-            elif(current_job != None and time - current_job.started >= current_job.end_time):
-                value_generated = current_job.value_function.evaluate(time - current_job.arrival_time)
-                print("Job {} finished at time {} (took {}) value = {} Queue size = {}".format(current_job.id, time, time - current_job.started, value_generated,len(self.scheduler.pending_jobs)))
-                total_value += value_generated
-                current_job = None
-                number_deliveries += 1
-
-            time += 1
-            value_array.append(total_value)
-            queue_length_hist.append(len(self.scheduler.pending_jobs))
-            number_delivered_hist.append(number_deliveries)
-            rev_per_delivery.append( 0 if(number_deliveries == 0) else total_value / number_deliveries)
-            
-        print("Total value generated is {:.2f}".format(total_value))
-        return value_array, queue_length_hist, number_delivered_hist, rev_per_delivery
 
 #Delete this late, this function is just for examining the value functions of individuals jobs
 #was used for debugging issues with the expected value function
@@ -87,24 +43,26 @@ def examineJob(job):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser()
+    run_experiment_1()
+    run_experiment_2()
+    run_experiment_3()
+    run_experiment_4()
+    run_experiment_5()
 
-    parser.add_argument('input_file',type=str)
-    parser.add_argument('--sched', dest='sched',choices=["LLV","FCFS","SJF"])
 
-    #args = parser.parse_args()
-
-    #print(args.input_file)
-
-    #Jobs = ParseInputFile(args.input_file)
-    
-    f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2)
+def run_experiment_1():
+    f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2, figsize=(14, 10))
     ax1.set_title("Profit over time")
     ax2.set_title("Queue size over time")
     ax3.set_title("Number of deliveries")
     ax4.set_title("Revenue per delivery")
 
-    for scheduler in [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF")]: 
+    #schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple")]
+    schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
+    #schedulers = [(FCFS_Multi(),"FCFS")]
+
+    for scheduler in schedulers: 
+        print(f"Running sim with {scheduler[1]}")
         simulation = Simulation(scheduler[0])
         profit, queue, number_deliveries, rev_per = simulation.Run()
         ax1.plot(profit, label=scheduler[1])
@@ -116,7 +74,112 @@ def main(argv):
     ax2.legend()
     ax3.legend()
     ax4.legend()
-    plt.show()
+    plt.savefig('exp1.png')
+    plt.clf()
+
+def run_experiment_2():
+    plt.title("Total Profit vs Arrival Interval")
+    plt.xlabel("Arrival Interval (s)")
+    plt.ylabel("Profit")
+
+    schedulers = tqdm([(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")], position = 1)
+    #schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
+    #schedulers = [(FCFS_Multi(),"FCFS")]
+
+    arrival_rates = range(20,100,5)
+    for scheduler in schedulers: 
+        schedulers.set_description(f"Running sim with {scheduler[1]}")
+        profit_list = []
+        simulation = Simulation(scheduler[0])
+        for arrival_rate in tqdm(arrival_rates, position = 0):
+            scheduler[0].clear()
+            #print(f"Running sim with {scheduler[1]} at {arrival_rate}s interval")
+            profit, queue, number_deliveries, rev_per = simulation.Run(arrival_interval = arrival_rate)
+            profit_list.append(profit[-1])
+        plt.plot(arrival_rates, profit_list, label=scheduler[1])
+    plt.ylim(0)
+    plt.legend()
+    plt.savefig('exp2.png')
+    plt.clf()
+    print()
+
+def run_experiment_3():
+    plt.title("Total Profit vs Queue Size")
+    plt.xlabel("Queue Size")
+    plt.ylabel("Profit")
+
+    schedulers = tqdm([(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")], position = 1)
+    #schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
+    #schedulers = [(FCFS_Multi(),"FCFS")]
+
+    queue_sizes = range(10,101,10)
+    for scheduler in schedulers: 
+        schedulers.set_description(f"Running sim with {scheduler[1]}")
+        profit_list = []
+        simulation = Simulation(scheduler[0])
+        for queue_size in tqdm(queue_sizes, position = 0):
+            scheduler[0].clear()
+            #print(f"Running sim with {scheduler[1]} at {arrival_rate}s interval")
+            profit, queue, number_deliveries, rev_per = simulation.Run(queue_size = queue_size)
+            profit_list.append(profit[-1])
+        plt.plot(queue_sizes, profit_list, label=scheduler[1])
+    plt.ylim(0)
+    plt.legend()
+    plt.savefig('exp3.png')
+    plt.clf()
+    print()
+
+def run_experiment_4():
+    plt.title("Total Profit vs Number of Drones")
+    plt.xlabel("Number of Drones")
+    plt.ylabel("Profit")
+
+    schedulers = tqdm([(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")], position = 1)
+    #schedulers = [(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF"),(FCFS_Multi(),"FCFS Multiple"),(SJF_Multi(),"SJF Multiple")]
+    #schedulers = [(FCFS_Multi(),"FCFS")]
+
+    drone_nums = range(1,30,2)
+    for scheduler in schedulers: 
+        schedulers.set_description(f"Running sim with {scheduler[1]}")
+        profit_list = []
+        simulation = Simulation(scheduler[0])
+        for drone_num in tqdm(drone_nums, position = 0):
+            scheduler[0].clear()
+            #print(f"Running sim with {scheduler[1]} at {arrival_rate}s interval")
+            profit, queue, number_deliveries, rev_per = simulation.Run(num_drones = drone_num)
+            profit_list.append(profit[-1])
+        plt.plot(drone_nums, profit_list, '-*', label=scheduler[1])
+    plt.ylim(0)
+    plt.legend()
+    plt.savefig('exp4.png')
+    plt.clf()
+    print()
+
+def run_experiment_5():
+    plt.title("Simulation Time vs Queue Size")
+    plt.xlabel("Queue Size")
+    plt.ylabel("Run Time (s)")
+
+    schedulers = tqdm([(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF")], position = 1)
+
+    queue_sizes = range(30,300,30)
+    for scheduler in schedulers: 
+        schedulers.set_description(f"Running sim with {scheduler[1]}")
+        time_list = []
+        simulation = Simulation(scheduler[0])
+        for queue_size in tqdm(queue_sizes, position = 0):
+            scheduler[0].clear()
+            #print(f"Running sim with {scheduler[1]} at {arrival_rate}s interval")
+            t1 = time()
+            simulation.Run(num_hours = 6, queue_size = queue_size, arrival_interval = 30)
+            t2 = time()
+            time_list.append(t2 - t1)
+        plt.plot(queue_sizes, time_list, '-*', label=scheduler[1])
+    plt.ylim(0)
+    plt.legend()
+    plt.savefig('exp5.png')
+    plt.clf()
+    print()
 
 if __name__ == "__main__":
    main(sys.argv[1:])

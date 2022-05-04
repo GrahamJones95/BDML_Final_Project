@@ -1,3 +1,6 @@
 *.dot
 *.profile
 __pycache__
+llv_test.py
+main.py
+distributions.py
