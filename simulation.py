@@ -10,7 +10,7 @@ class Simulation:
         self.scheduler : Scheduler = scheduler 
         self.max_time = 6*60*60 #6 hours per the paper
 
-    def Run(self, arrival_interval = 60, queue_size = 40, num_drones = 15):
+    def Run(self, arrival_interval = 60, queue_size = 40, num_drones = 15, num_hours = 6):
         time = 0
         job_gen : Job_Generator = Job_Generator(arrival_interval)
         job_queue : ActiveDrones = ActiveDrones(num_drones)
@@ -23,7 +23,7 @@ class Simulation:
         number_delivered_hist = []
         rev_per_delivery = []
 
-        while(time < 6*60*60): #Each timestep corresponds to a second
+        while(time < num_hours*60*60): #Each timestep corresponds to a second
 
             if(job_gen.new_job_available(time) and len(self.scheduler.pending_jobs) < queue_size):
                 self.scheduler.add_job(job_gen.fetch_new_job(time))

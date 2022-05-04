@@ -10,6 +10,7 @@ from job import Job, ValueFunction, DistType
 from random import randint, choice
 from simulation import Simulation
 from tqdm import tqdm 
+from time import time
 
 def ParseInputFile(filename):
     input_file = open(filename,'r')
@@ -43,9 +44,10 @@ def examineJob(job):
 
 def main(argv):
     run_experiment_1()
-    #run_experiment_2()
-    #run_experiment_3()
-    #run_experiment_4()
+    run_experiment_2()
+    run_experiment_3()
+    run_experiment_4()
+    run_experiment_5()
 
 
 def run_experiment_1():
@@ -98,6 +100,7 @@ def run_experiment_2():
     plt.ylim(0)
     plt.legend()
     plt.savefig('exp2.png')
+    plt.clf()
     print()
 
 def run_experiment_3():
@@ -123,6 +126,7 @@ def run_experiment_3():
     plt.ylim(0)
     plt.legend()
     plt.savefig('exp3.png')
+    plt.clf()
     print()
 
 def run_experiment_4():
@@ -148,6 +152,33 @@ def run_experiment_4():
     plt.ylim(0)
     plt.legend()
     plt.savefig('exp4.png')
+    plt.clf()
+    print()
+
+def run_experiment_5():
+    plt.title("Simulation Time vs Queue Size")
+    plt.xlabel("Queue Size")
+    plt.ylabel("Run Time (s)")
+
+    schedulers = tqdm([(Scheduler(),"FCFS"),(LLV_Scheduler(),"LLV"),(SJF(),"SJF")], position = 1)
+
+    queue_sizes = range(30,300,30)
+    for scheduler in schedulers: 
+        schedulers.set_description(f"Running sim with {scheduler[1]}")
+        time_list = []
+        simulation = Simulation(scheduler[0])
+        for queue_size in tqdm(queue_sizes, position = 0):
+            scheduler[0].clear()
+            #print(f"Running sim with {scheduler[1]} at {arrival_rate}s interval")
+            t1 = time()
+            simulation.Run(num_hours = 6, queue_size = queue_size, arrival_interval = 30)
+            t2 = time()
+            time_list.append(t2 - t1)
+        plt.plot(queue_sizes, time_list, '-*', label=scheduler[1])
+    plt.ylim(0)
+    plt.legend()
+    plt.savefig('exp5.png')
+    plt.clf()
     print()
 
 if __name__ == "__main__":
